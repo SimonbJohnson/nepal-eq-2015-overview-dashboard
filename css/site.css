@@ -1,0 +1,12 @@
+#map{
+    width:80%;
+    height:350px;
+}
+
+#title {
+    border-bottom-style:solid;
+    border-bottom-width:1px;
+    border-bottom-color:#ddd;
+    margin-bottom:10px;
+}
+

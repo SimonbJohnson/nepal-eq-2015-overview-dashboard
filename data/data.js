@@ -1,0 +1,32 @@
+var data = [
+  {
+    "column1":"Kathmandu",
+    "column2":"Activity1",
+    "column3":100
+  },
+  {
+    "column1":"Kathmandu",
+    "column2":"Activity2",
+    "column3":200
+  },
+  {
+    "column1":"Rukum",
+    "column2":"Activity1",
+    "column3":300
+  },
+  {
+    "column1":"Rukum",
+    "column2":"Activity2",
+    "column3":400
+  },
+  {
+    "column1":"Salyan",
+    "column2":"Activity1",
+    "column3":500
+  },
+  {
+    "column1":"Salyan",
+    "column2":"Activity2",
+    "column3":600
+  }
+];
