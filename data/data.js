@@ -5,11 +5,6 @@ var data = [
     "column3":100
   },
   {
-    "column1":"Kathmandu",
-    "column2":"Activity2",
-    "column3":200
-  },
-  {
     "column1":"Rukum",
     "column2":"Activity1",
     "column3":300

@@ -6,7 +6,7 @@ var dashmap = new ld.map('#map')
         .geojson(nepal_adm3)
         .center([28.3,83.7])
         .zoom(6)
-        .joinAttr('HLCIT_CODE');
+        .joinAttr('DISTRICT');
 
 var rowChart1 = new ld.rowGraph('#graph1').data(data)
         .place('column1')

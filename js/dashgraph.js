@@ -11,6 +11,15 @@ var ld = {
            e.init(); 
         });        
     },
+    
+    updateAll: function(){
+        ld._chartRegister.forEach(function(chart){
+           chart.update(); 
+        });
+        ld._mapRegister.forEach(function(map){
+           map.update(); 
+        });      
+    },
 
     rowGraph: function(id){
 
@@ -24,6 +33,7 @@ var ld = {
         this._values = "";
         this._barcolor = "steelblue";
         this._fontcolor = "white";
+        this._textShift = 20;
 
         ld._chartRegister.push(this);
 
@@ -142,8 +152,23 @@ var ld = {
                 .attr("class","dashgraph-bar")
                 .attr("fill",this._barcolor)
                 .on("click",function(d){
-
-                });        
+                    _chart.selectAll("rect").attr("fill","#ccc");
+                    d3.select(this).attr("fill",_parent._barcolor);
+                });
+        
+            _chart.selectAll("text")
+                .data(data)
+                .enter().append("text")
+                .text(function(d) {
+                     return d.key +' ('+d.value+')';
+                })        
+                .attr("x", function(d) {
+                    return 5;
+                })
+                .attr("y", function(d) {
+                    return _parent._properties.y(d.key)+_parent._textShift;
+                })
+                .attr("fill",this._fontcolor);
         };
     },
 
@@ -154,7 +179,9 @@ var ld = {
         this._center = [0,0];
         this._zoom = 1;
         this._joinAttr = "";
-        this._joinAttr = "steelblue";
+        //todo - make accessor for
+        this._colors = ["#CCCCCC","steelblue"];
+        this._filterOn = false;
         
         ld._mapRegister.push(this);
 
@@ -195,6 +222,8 @@ var ld = {
         };        
 
         this._initMap = function(id,geojson, center, zoom, joinAttr){
+            
+            var _parent = this;
 
             var base_hotosm = L.tileLayer(
                 'http://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',{
@@ -213,7 +242,15 @@ var ld = {
             });
 
             var overlay = L.geoJson(geojson,{
+                style: this._style(),
+                onEachFeature: onEachFeature
             }).addTo(map);
+            
+            function onEachFeature(feature, layer) {
+                layer.on('click', function (e){
+                    _parent.filter(feature.properties[joinAttr]);
+                });
+            }            
             
             overlay.eachLayer(function (layer) {
                 if(typeof layer._path != 'undefined'){
@@ -227,14 +264,32 @@ var ld = {
 
             return map;
         },
+                
+        this.filter = function(placeID){
+            //this._chartRegister.forEach(function(chart){
+            //    chart.cf.placeDimension.filter(placeID);
+            //});
+            //need to keep track of filters, let user apply cap if necessary
+            // dc users selected class for coloring
+            ld.updateAll();
+        },
         
-        this.mapUpdate = function(){
+        this.update = function(){
             var mapData = [];
             var parent = this;
             ld._chartRegister.forEach(function(chart){
-                mapData = parent._addCF(mapData,chart.cf.typeGroup.all())
+                mapData = parent._addCF(mapData,chart.cf.placeGroup.all());
             });
-            console.log(mapData);
+            var i = 0;
+            if(this._filterOn===false){
+                mapData.forEach(function(d){
+                    var color = parent._colors[parent._colorAccessor(d,i)];
+                    d3.selectAll('#'+d.key).attr('fill',color).attr('stroke-opacity',0.8).attr('fill-opacity',0.8);
+                    i++;
+                });
+            } else {
+                
+            }
         },
                 
         this._addCF = function (data,newdata){
@@ -270,6 +325,8 @@ var ld = {
             return data;
         },
         
+        //todo - hard coded for now - need to make public and settable;
+        
         this._colorAccessor = function (d,i){
             var total=0;
             for(var i in d.values) { total += d.values[i]; }
@@ -279,9 +336,19 @@ var ld = {
                 0;
             }
         },
+                
+        this._style = function(){
+            return {
+                weight: 1,
+                opacity: 0,
+                fillOpacity: 0,
+                className: 'dashgeom'
+            };
+        },
 
         this.init = function(){
             this._initMap(this._id,this._geojson,this._center,this._zoom,this._joinAttr);
+            this.update();
         };
     }
 };
