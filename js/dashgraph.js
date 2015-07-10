@@ -2,6 +2,7 @@ var ld = {
 
     _chartRegister :[],
     _mapRegister:[],
+    _chartFiltered:-1,
     
     init: function(){
         ld._chartRegister.forEach(function(e){
@@ -21,6 +22,15 @@ var ld = {
         });      
     },
 
+    colorScale: function(color,scale){
+        color = d3.rgb(color);
+        color.r = color.r+Math.floor((255-color.r)*(4-scale)/5)
+        color.b = color.b+Math.floor((255-color.b)*(4-scale)/5)
+        color.g = color.g+Math.floor((255-color.g)*(4-scale)/5)
+        return color.toString();
+        //return d3.rgb(color).brighter(4-scale).toString();
+    },
+
     rowGraph: function(id){
 
         this._height=300;
@@ -31,9 +41,13 @@ var ld = {
         this._place = "";
         this._type = "";
         this._values = "";
-        this._barcolor = "steelblue";
+        this._barcolor = "#0091EA";
+        this._mapcolors = [];
         this._fontcolor = "white";
         this._textShift = 20;
+        this._filterOn = false;
+        this._filters = [];
+        this._ref = ld._chartRegister.length;    
 
         ld._chartRegister.push(this);
 
@@ -98,11 +112,23 @@ var ld = {
                 this._barcolor=val;
                 return this;
             }        
-        };        
+        };
+
+        this.mapcolors = function(val){
+            if(typeof val === 'undefined'){
+                return this._mapcolors;
+            } else {
+                this._mapcolors=val;
+                return this;
+            }        
+        };                  
 
         this.init= function(){
             this.cf = this._initCrossfilter(this._data,this._place,this._type,this._values);
-            this._render(this._id,this.cf.typeGroup.all());           
+            this._render(this._id,this.cf.typeGroup.all());
+            if(this._mapcolors.length==0){
+                this._mapcolors=this._genMapColors();
+            }           
         };
 
         this._initCrossfilter = function(data,place,key,value){
@@ -116,8 +142,8 @@ var ld = {
             return cf;
         };
 
-
         this._render = function(id,data){       
+
             this._properties.margin = {top: 20, right: 20, bottom: 20, left: 20};
             this._properties.width = this._width - this._properties.margin.left - this._properties.margin.right;
             this._properties.height = this._height - this._properties.margin.top - this._properties.margin.bottom;      
@@ -126,7 +152,7 @@ var ld = {
                .range([0, this._properties.width]).domain([0, d3.max(data,function(d){return d.value;})]);
 
             this._properties.y = d3.scale.ordinal()
-               .rangeBands([0, this._properties.height]).domain(data.map(function(d) {return d.key; }));
+               .rangeBands([0, this._properties.height]).domain(data.map(function(d) {return d.key; }));                
 
             var _chart = d3.select(id)
                 .append('svg')
@@ -137,8 +163,8 @@ var ld = {
                 .attr("transform", "translate(" + this._properties.margin.left + "," + this._properties.margin.left + ")");        
 
             var _parent = this;
-
-            _chart.selectAll("rect")
+            
+            _chart.append("g").selectAll("rect")
                 .data(data)
                 .enter().append("rect")
                 .attr("x", 0)
@@ -149,13 +175,33 @@ var ld = {
                     return _parent._properties.x(d.value);
                 })
                 .attr("height", _parent._properties.y.rangeBand()-1)
-                .attr("class","dashgraph-bar")
+                .attr("fill","#dddddd")
+                .on("click",function(d){
+                    _parent._filter(d.key);
+                });
+
+            _chart.append("g").selectAll("rect")
+                .data(data)
+                .enter().append("rect")
+                .attr("x", 0)
+                .attr("y", function(d){;
+                    return _parent._properties.y(d.key);
+                })
+                .attr("width", function(d){
+                    return _parent._properties.x(d.value);
+                })
+                .attr("height", _parent._properties.y.rangeBand()-1)
+                .attr("class","dashgraph-bar clickable bar"+this._ref)
+                .attr("id",function(d){
+                    return "dgbar"+_parent._ref+d.key;
+                })
                 .attr("fill",this._barcolor)
                 .on("click",function(d){
-                    _chart.selectAll("rect").attr("fill","#ccc");
-                    d3.select(this).attr("fill",_parent._barcolor);
+                    _parent._filter(d.key);
                 });
-        
+
+            var g = _chart.append("g") 
+           
             _chart.selectAll("text")
                 .data(data)
                 .enter().append("text")
@@ -168,8 +214,87 @@ var ld = {
                 .attr("y", function(d) {
                     return _parent._properties.y(d.key)+_parent._textShift;
                 })
-                .attr("fill",this._fontcolor);
+                .attr("fill",this._fontcolor)
+                .attr("class","clickable textlabel")
+                .on("click",function(d){
+                    _parent._filter(d.key);
+                });
+
+            
+            var texts = _chart.selectAll(".textlabel");
+
+            texts[0].forEach(function(t){
+                g.append("rect").attr("x",t.getBBox().x).attr("y",t.getBBox().y).attr("width",t.getBBox().width).attr("height",t.getBBox().height).attr("fill",ld.colorScale(_parent._barcolor,2));
+            })
+            
         };
+
+        this._filter = function(filter){
+                ld._chartFiltered = this._ref;
+
+                //will need to adjust later on to accept chart relationship map
+                //when you come back to this need to adjust addcf function on maps next to add right charts
+
+                ld._chartRegister.forEach(function(chart){
+                    if(chart._ref!=ld._chartFiltered){
+                        chart.cf.typeDimension.filterAll();
+                        chart._filters=[];
+                    }
+                });
+
+                var index = this._filters.indexOf(filter);
+                if(index===-1){
+                    this._filters.push(filter);
+                    this._filterOn = true;
+                } else {
+                    this._filters.splice(index,1);
+                }
+                if(this._filters.length===0){
+                    this._filterOn = false;
+                    ld._chartFiltered=-1;
+                }
+
+                var _parent = this;
+                if(this._filterOn){
+                    _parent.cf.typeDimension.filter(function(d){
+                        return _parent._filters.indexOf(d) > -1;
+                    });             
+                } else {
+                    _parent.cf.typeDimension.filterAll();
+                }
+                ld.updateAll();            
+        }
+
+        this.update = function(){
+            //this._id,this.cf.typeGroup.all()
+            var _parent = this;
+
+            if(this._filterOn){
+                d3.selectAll('.bar'+this._ref).attr('fill','#dddddd');
+                this._filters.forEach(function(f){
+                    d3.select('#dgbar'+_parent._ref+f).attr('fill',_parent._barcolor);
+                });
+            } else {
+                if(ld._chartFiltered == -1){
+                    d3.selectAll('.bar'+this._ref).attr('fill',this._barcolor);
+                } else {
+                    d3.selectAll('.bar'+this._ref).attr('fill','#dddddd');
+                }
+            }
+            var _parent = this;
+            d3.select(this._id).selectAll('.dashgraph-bar').data(this.cf.typeGroup.all())
+            .transition().attr('width', function(d,i){
+                    return _parent._properties.x(d.value);
+                });
+            d3.select(this._id).selectAll('text').data(this.cf.typeGroup.all())
+                .text(function(d) {
+                     return d.key +' ('+d.value+')';
+                })   
+        }
+
+        this._genMapColors = function(){
+            return ['#cccccc',ld.colorScale(this._barcolor,1),ld.colorScale(this._barcolor,2),ld.colorScale(this._barcolor,3),ld.colorScale(this._barcolor,4)];
+        }
     },
 
     map:function (id){
@@ -179,9 +304,11 @@ var ld = {
         this._center = [0,0];
         this._zoom = 1;
         this._joinAttr = "";
-        //todo - make accessor for
-        this._colors = ["#CCCCCC","steelblue"];
+        this._colors = ['#CCCCCC','#80D8FF','#40C4FF','#00B0FF','#0091EA'];
         this._filterOn = false;
+        this._filters = [];
+
+        this._haveValues = [];
         
         ld._mapRegister.push(this);
 
@@ -219,7 +346,16 @@ var ld = {
                 this._joinAttr=val;
                 return this;
             }        
-        };        
+        };
+
+        this.colorAccessor = function(val){
+            if(typeof val === 'undefined'){
+                return this._colorAccessor;
+            } else {
+                this._colorAccessor=val;
+                return this;
+            }        
+        };                
 
         this._initMap = function(id,geojson, center, zoom, joinAttr){
             
@@ -248,54 +384,128 @@ var ld = {
             
             function onEachFeature(feature, layer) {
                 layer.on('click', function (e){
-                    _parent.filter(feature.properties[joinAttr]);
+                    _parent._filterOn = true;
+                    _parent._filter(feature.properties[joinAttr]);
                 });
             }            
             
             overlay.eachLayer(function (layer) {
                 if(typeof layer._path != 'undefined'){
-                    layer._path.id = layer.feature.properties[joinAttr];
+                    layer._path.id = 'dgmap'+layer.feature.properties[joinAttr];
                 } else {
                     layer.eachLayer(function (layer2){
-                        layer2._path.id = layer.feature.properties[joinAttr];
+                        layer2._path.id = 'dgmap'+layer.feature.properties[joinAttr];
                     });
                 }
-            });            
+            });
 
-            return map;
-        },
-                
-        this.filter = function(placeID){
-            //this._chartRegister.forEach(function(chart){
-            //    chart.cf.placeDimension.filter(placeID);
-            //});
-            //need to keep track of filters, let user apply cap if necessary
-            // dc users selected class for coloring
-            ld.updateAll();
-        },
-        
-        this.update = function(){
+            //add class to geoms that has no data attached so they cannot be filtered
+
             var mapData = [];
             var parent = this;
             ld._chartRegister.forEach(function(chart){
                 mapData = parent._addCF(mapData,chart.cf.placeGroup.all());
             });
+            mapData.forEach(function(d){
+                parent._haveValues.push(d.key);
+                d3.selectAll('#dgmap'+d.key).classed('hasValue',true);
+            });
+
+            return map;
+        };
+                
+        this._filter = function(placeID){
+            if(this._haveValues.indexOf(placeID)>-1){
+                var index = this._filters.indexOf(placeID);
+                if(index===-1){
+                    this._filters.push(placeID);
+                } else {
+                    this._filters.splice(index,1);
+                }
+                if(this._filters.length===0){
+                    this._filterOn = false;
+                }
+                var parent = this;
+                if(this._filterOn){
+                    ld._chartRegister.forEach(function(chart){
+                            chart.cf.placeDimension.filter(function(d){
+                              return parent._filters.indexOf(d) > -1;
+                            });             
+                    });
+                } else {
+                    ld._chartRegister.forEach(function(chart){
+                        chart.cf.placeDimension.filterAll();
+                    });
+                }
+                ld.updateAll();
+            }
+        };
+        
+        this.update = function(){
+
+            var mapData = [];
+            var parent = this;
+            if(ld._chartFiltered ==-1){
+                ld._chartRegister.forEach(function(chart){
+                    mapData = parent._addCF(mapData,chart.cf.placeGroup.all());
+                });
+            } else {
+                mapData = ld._chartRegister[ld._chartFiltered].cf.placeGroup.all();
+            }
             var i = 0;
+            var max = d3.max(mapData,function(d){
+                return d.value;
+            });            
             if(this._filterOn===false){
                 mapData.forEach(function(d){
-                    var color = parent._colors[parent._colorAccessor(d,i)];
-                    d3.selectAll('#'+d.key).attr('fill',color).attr('stroke-opacity',0.8).attr('fill-opacity',0.8);
+                    if(ld._chartFiltered==-1){
+                        var color = parent._colors[parent._colorAccessor(d,max,i)];
+                    } else {
+                        var color = ld._chartRegister[ld._chartFiltered]._mapcolors[parent._colorAccessor(d,max,i)];
+                    }
+                    d3.selectAll('#dgmap'+d.key).attr('fill',color).attr('stroke-opacity',0.8).attr('fill-opacity',0.8);
                     i++;
                 });
             } else {
-                
+                mapData.forEach(function(d){
+                    if(ld._chartFiltered==-1){
+                        var color = parent._colors[parent._colorAccessor(d,max,i)];
+                    } else {
+                        var color = ld._chartRegister[ld._chartFiltered]._mapcolors[parent._colorAccessor(d,max,i)];
+                    }
+                    if(parent._filters.indexOf(d.key) > -1){
+                        d3.selectAll('#dgmap'+d.key).attr('fill',color).attr('stroke-opacity',0.8).attr('fill-opacity',0.8);
+                    } else {
+                        d3.selectAll('#dgmap'+d.key).attr('fill','grey').attr('stroke-opacity',0.8).attr('fill-opacity',0.8);
+                    }
+                    i++;
+                });
             }
-        },
-                
+        };
+                        
+
         this._addCF = function (data,newdata){
+            newdata.forEach(function(d){
+                var found = false;
+                var i = 0;
+                while(found===false && i<data.length){
+                    if(d.key === data[i].key){
+                        data[i].value+=d.value;
+                        found =true;
+                    }
+                    i++;
+                }
+                if(found===false){
+                    data.push({key:d.key,value:d.value});
+                }                                
+            });
+            return data;
+        };
+
+        this._oldaddCF = function (data,newdata){
             if(data.length>0){
                 data.forEach(function(d){
-                    d.values.push[0];
+                    d.values.push(0);
                 });
                 var length = data[0].values.length-1;
                 newdata.forEach(function(d){
@@ -303,18 +513,18 @@ var ld = {
                     var i = 0;
                     while(found===false && i<data.length){
                         if(d.key === data[i].key){
-                            data[i].values.push(d.value);
+                            data[i].values[length]=d.value;
                             found =true;
                         }
                         i++;
                     }
                     if(found===false){
-                        var values = [];
-                        for (i = 0; i < length-1; i++) { 
-                            values = values.push(0);
+                        var valueslist = [];
+                        for (i = 0; i <= length-1; i++) { 
+                            valueslist.push(0);
                         }
-                        values.push(d.value);
-                        data.push[{key:d.key,values:values}];
+                        valueslist.push(d.value);
+                        data.push({key:d.key,values:valueslist});
                     }
                 });
             } else {
@@ -323,19 +533,16 @@ var ld = {
                 });
             }
             return data;
-        },
+        };
         
-        //todo - hard coded for now - need to make public and settable;
-        
-        this._colorAccessor = function (d,i){
-            var total=0;
-            for(var i in d.values) { total += d.values[i]; }
-            if(total>0){
-                return 1;
+        this._colorAccessor = function (d,max,i){
+            if(d.value>0){
+                value = Math.log(d.value);
+                return Math.floor(value*4/Math.log(max+1))+1;
             } else {
-                0;
+                return 0;
             }
-        },
+        };
                 
         this._style = function(){
             return {
@@ -344,7 +551,7 @@ var ld = {
                 fillOpacity: 0,
                 className: 'dashgeom'
             };
-        },
+        };
 
         this.init = function(){
             this._initMap(this._id,this._geojson,this._center,this._zoom,this._joinAttr);
