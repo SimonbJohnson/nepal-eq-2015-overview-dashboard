@@ -15,6 +15,8 @@
         <script src="data/data.js"></script>
         <script src="data/data2.js"></script>
         <script src="data/data3.js"></script>
+        <script src="data/data4.js"></script>
+        <script src="data/data5.js"></script>
         <script src="js/dashgraph.js"></script>
         <script type="text/javascript">
             var _gaq = _gaq || [];
@@ -34,38 +36,52 @@
                 <div class="col-md-12">
                     <div id="title">
                         <h1>IFRC Nepal Overview Dashboard</h1>
+                        <p>1) Click a district to view stats for that district</p>
+                        <p>2) Click a bar on a graph to view the map for that statistics</p>
+                        <p>3) Merge Maps, click one bar graph and then a non-grey bar on another graph to merge the data sets</p>
                     </div>
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-3">
-                    <p>Lorem ipsum dolor sit amet, ad civibus copiosae disputando 
-                        nam, pro alterum assentior eu. In has zril appareat. Mei 
-                        zril principes et, mel ex omnis possim. Id saepe graece 
-                        assueverit cum, pri quaeque accusam id, per vivendo vituperata 
-                        te.
-                    </p>
+                <div class="col-md-10">
+                    <div id="maptitle"></div>
+                    <div id="map"></div>
                 </div>                
-                <div class="col-md-9">
-                    <div id="map">                       
-                    </div>
-                </div>
+                <div class="col-md-2">
+                    <h3>Legend</h3>
+                    <div id="legend"></div>
+                </div>                
             </div>
             <div class="row">
-                <div class="col-md-3">
-                    <div id="graph1">                       
-                    </div>                    
-                </div>                
-                <div class="col-md-3">
-                    <div id="graph2">                       
+                <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4>Affected People</h4>
+                            <div id="graph1">                       
+                            </div>                    
+                        </div>                
+                        <div class="col-md-6">
+                            <h4>Affected Households</h4>
+                            <div id="graph2">                       
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4>Affected Families</h4>
+                            <div id="graph4">                       
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-3">
+                    <h4>Distributions</h4>
                     <div id="graph3">                       
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div id="graph4">                       
+                    <h4>Volunteers and Staff</h4>
+                    <div id="graph5">                       
                     </div>
                 </div>                                  
             </div>             

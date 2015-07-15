@@ -1,3 +1,23 @@
 .clickable:hover{
 	cursor:pointer
 }
+
+i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #000000;
+}
+
+.ldinfo{
+    padding:5px;
+    background-color:white;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    font-size:1.5em;
+    color:#056CB6;
+ }

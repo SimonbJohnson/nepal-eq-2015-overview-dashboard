@@ -1,3 +1,10 @@
+// todo 
+// legend
+// check filters accept spaces
+// mouse over info box
+// new color accessor
+// comment code and push to library
+
 var ld = {
 
     _chartRegister :[],
@@ -5,48 +12,8 @@ var ld = {
     _chartFiltered:-1,
     _chartSubFiltered:-1,
     _relations:{},
-    
-    init: function(){
-        ld._chartRegister.forEach(function(e){
-           e.init(); 
-        });
-        ld._mapRegister.forEach(function(e){
-           e.init(); 
-        });        
-    },
-    
-    updateAll: function(){
-        console.log(ld._chartFiltered);
-        console.log(ld._chartSubFiltered);
-        ld._chartRegister.forEach(function(chart){
-           chart.update(); 
-        });
-        ld._mapRegister.forEach(function(map){
-           map.update(); 
-        });      
-    },
-
-    colorScale: function(color,scale){
-        color = d3.rgb(color);
-        color.r = color.r+Math.floor((255-color.r)*(4-scale)/5)
-        color.b = color.b+Math.floor((255-color.b)*(4-scale)/5)
-        color.g = color.g+Math.floor((255-color.g)*(4-scale)/5)
-        return color.toString();
-        //return d3.rgb(color).brighter(4-scale).toString();
-    },
-
-    colorMerge: function(color1,color2){
-        var newColors = [];
-        for(var i=0;i<5;i++){
-            var c1 = d3.rgb(color1[i]);
-            var c2 = d3.rgb(color2[i]);
-            console.log(color1[i]);
-            console.log(color2[i])
-            console.log(d3.rgb(Math.floor((c1.r+c2.r)/2),Math.floor((c1.g+c2.g)/2),Math.floor((c1.b+c2.b)/2)).toString());
-            newColors.push(d3.rgb(Math.floor((c1.r+c2.r)/2),Math.floor((c1.g+c2.g)/2),Math.floor((c1.b+c2.b)/2)).toString());
-        }
-        return newColors;
-    },
+    _titleDiv: '',
+    _legendDiv:'',
 
     relations: function(val){
             if(typeof val === 'undefined'){
@@ -56,6 +23,103 @@ var ld = {
                 return this;
             }        
         },
+
+    titleDiv: function(val){
+            if(typeof val === 'undefined'){
+                return this._titleDiv;
+            } else {
+                this._titleDiv=val;
+                return this;
+            }        
+        },
+
+    legendDiv: function(val){
+            if(typeof val === 'undefined'){
+                return this._legendDiv;
+            } else {
+                this._legendDiv=val;
+                return this;
+            }        
+        },                   
+    
+    init: function(){
+        this.updateTitle();
+        this._generateLegend();         
+        this._chartRegister.forEach(function(e){
+           e.init(); 
+        });
+        this._mapRegister.forEach(function(e){
+           e.init(); 
+        });       
+    },
+    
+    updateAll: function(){
+        this._chartRegister.forEach(function(chart){
+           chart.update(); 
+        });
+        this._mapRegister.forEach(function(map){
+           map.update(); 
+        });
+        this.updateTitle();      
+    },
+
+    updateTitle: function(){
+        if(this._titleDiv!=''){
+            if(this._chartFiltered==-1){
+                var title = 'Map of general activity'
+            } else {
+                var filters = this._chartRegister[this._chartFiltered].printFilters();
+                if(this._chartSubFiltered==-1){
+                    var title = 'Map of ' + filters;
+                } else {
+                    var subfilters = this._chartRegister[this._chartSubFiltered].printFilters();
+                    var title = 'Map of (' + filters + ') / (' + subfilters + ')';                
+                }
+            }
+            d3.select(this._titleDiv).html(title);
+        }
+    },
+
+    _generateLegend: function(){
+        if(this._legendDiv!=''){
+            var html = '';
+            for(var i = 0;i<5;i++){
+                html +='<p><i id="ldl'+i+'box" class="ldlegendbox"></i><span id="ldl'+i+'text" class="ldlegendtext"></span></p>';
+            }
+            d3.select(this._legendDiv).html(html);
+        }
+    },
+
+    _updateLegend: function(color,max){
+        if(this._legendDiv!=''){
+            d3.select('#ldl0box').style('background-color',color[0]);
+            d3.select('#ldl0text').html('0');
+            var prev=0;
+            for(i=1;i<5;i++){
+                d3.select('#ldl' + i + 'box').style('background-color',color[i]);
+                d3.select('#ldl' + i + 'text').html((prev+0.1).toFixed(1) + ' - ' + (Math.exp(((i) * Math.log(max+2))/4)-1).toFixed(1));
+                prev = Math.exp(((i) * Math.log(max+2))/4)-1;      
+            }
+        }
+    },
+
+    colorScale: function(color,scale){
+        color = d3.rgb(color);
+        color.r = color.r+Math.floor((255-color.r)*(4-scale)/5)
+        color.b = color.b+Math.floor((255-color.b)*(4-scale)/5)
+        color.g = color.g+Math.floor((255-color.g)*(4-scale)/5)
+        return color.toString();
+    },
+
+    colorMerge: function(color1,color2){
+        var newColors = [];
+        for(var i=0;i<5;i++){
+            var c1 = d3.rgb(color1[i]);
+            var c2 = d3.rgb(color2[i]);
+            newColors.push(d3.rgb(Math.floor((c1.r+c2.r)/2),Math.floor((c1.g+c2.g)/2),Math.floor((c1.b+c2.b)/2)).toString());
+        }
+        return newColors;
+    },  
 
     rowGraph: function(id){
 
@@ -78,6 +142,7 @@ var ld = {
         this._ref = ld._chartRegister.length;
         this._name = 'ldgraph_'+ this._ref;
         this_subFilter = false;
+
 
         ld._chartRegister.push(this);
 
@@ -347,7 +412,6 @@ var ld = {
         }
 
         this.update = function(){
-            //this._id,this.cf.typeGroup.all()
             var _parent = this;
 
             if(this._filterOn){
@@ -399,6 +463,20 @@ var ld = {
                 }
 
             }
+        };
+
+        this.printFilters = function(){
+            var filters = [];
+            var i=0;
+            this._filters.forEach(function(f){
+                if(i==0){
+                    filters = f;
+                } else {
+                    filters += ' + ' + f;
+                }
+                i++
+            });
+            return filters;
         }   
     },
 
@@ -412,6 +490,10 @@ var ld = {
         this._colors = ['#CCCCCC','#81D4FA','#29B6F6','#0288D1','#01579B'];
         this._filterOn = false;
         this._filters = [];
+        this._currentData = [];
+        this._filterData = [];
+        this._subData = [];
+        this._infoAttr = "";
 
         this._haveValues = [];
         
@@ -453,6 +535,15 @@ var ld = {
             }        
         };
 
+        this.infoAttr = function(val){
+            if(typeof val === 'undefined'){
+                return this._infoAttr;
+            } else {
+                this._infoAttr=val;
+                return this;
+            }        
+        };        
+
         this.colorAccessor = function(val){
             if(typeof val === 'undefined'){
                 return this._colorAccessor;
@@ -462,7 +553,7 @@ var ld = {
             }        
         };                
 
-        this._initMap = function(id,geojson, center, zoom, joinAttr){
+        this._initMap = function(id,geojson, center, zoom, joinAttr, infoAttr){
             
             var _parent = this;
 
@@ -492,7 +583,22 @@ var ld = {
                     _parent._filterOn = true;
                     _parent._filter(feature.properties[joinAttr]);
                 });
-            }            
+            }
+            if(this._infoAttr!=''){
+                _info = L.control();
+
+                _info.onAdd = function (map) {
+                    this._div = L.DomUtil.create('div', 'ldinfo');
+                    this.update();
+                        return this._div;
+                    };
+
+                _info.update = function (name) {
+                        this._div.innerHTML = (name ? name: 'Hover for name');
+                    };
+
+                _info.addTo(map);
+            }                        
             
             overlay.eachLayer(function (layer) {
                 if(typeof layer._path != 'undefined'){
@@ -502,9 +608,57 @@ var ld = {
                         layer2._path.id = 'dgmap'+layer.feature.properties[joinAttr];
                     });
                 }
+                if(_parent._infoAttr!=""){
+                    layer.on("mouseover",function(){
+                        if(_parent._chartFiltered == -1){
+                            var info = layer.feature.properties[infoAttr];
+                        } else {
+                            var current = "N/A";
+                            var filter = 0;
+                            var sub = 0;
+                            var found = false;
+                            var i = 0;
+                            while(found===false && i<_parent._currentData.length){
+                                if(layer.feature.properties[joinAttr] === _parent._currentData[i].key){
+                                    current = _parent._currentData[i].value;
+                                    found =true;
+                                }
+                                i++;
+                            }
+                            var found = false;
+                            var i = 0;
+                            while(found===false && i<_parent._filterData.length){
+                                if(layer.feature.properties[joinAttr] === _parent._filterData[i].key){
+                                    filter = _parent._filterData[i].value;
+                                    found =true;
+                                }
+                                i++;
+                            }
+                            var found = false;
+                            var i = 0;
+                            while(found===false && i<_parent._subData.length){
+                                if(layer.feature.properties[joinAttr] === _parent._subData[i].key){
+                                    sub = _parent._subData[i].value;
+                                    found =true;
+                                }
+                                i++;
+                            }
+                            if(ld._chartSubFiltered ==-1){
+                                var info = layer.feature.properties[infoAttr]+": "+current;
+                            } else {
+                                var info = layer.feature.properties[infoAttr]+"<br />"
+                                +ld._chartRegister[ld._chartFiltered].printFilters()+": "+filter+"<br />"
+                                +ld._chartRegister[ld._chartSubFiltered].printFilters()+": "+sub+"<br />"
+                                +"Result : "+Number(current).toFixed(2);
+                            }                                                                
+                        }
+                        _info.update(info);
+                    });
+                    layer.on("mouseout",function(){
+                        _info.update();
+                    });
+                }                
             });
-
-            //add class to geoms that has no data attached so they cannot be filtered
 
             var mapData = [];
             var parent = this;
@@ -553,14 +707,24 @@ var ld = {
             if(ld._chartFiltered ==-1){
                 ld._chartRegister.forEach(function(chart){
                     mapData = parent._addCF(mapData,chart.cf.placeGroup.all());
+                    this._currentData = mapData;
+                    this._filterData = mapData;
+                    this._subData = [];
                 });
             } else {
-                if(ld._chartSubFiltered ==-1)
+                if(ld._chartSubFiltered ==-1) {
                     mapData = ld._chartRegister[ld._chartFiltered].cf.placeGroup.all();
-                else {
+                    this._currentData = mapData;
+                    this._filterData = mapData;
+                    this._subData = [];
+                } else {
                     mapData = parent._divideCF(ld._chartRegister[ld._chartFiltered].cf.placeGroup.all(),ld._chartRegister[ld._chartSubFiltered].cf.placeGroup.all());
+                
+                    this._currentData = mapData;
+                    this._filterData = ld._chartRegister[ld._chartFiltered].cf.placeGroup.all();
+                    this._subData = ld._chartRegister[ld._chartSubFiltered].cf.placeGroup.all();
                 }
-            }
+            }           
             var i = 0;
             var max = d3.max(mapData,function(d){
                 return d.value;
@@ -568,37 +732,37 @@ var ld = {
             var mergeColors = [];
             if(ld._chartSubFiltered!=-1){
                 mergeColors = ld.colorMerge(ld._chartRegister[ld._chartFiltered]._mapcolors,ld._chartRegister[ld._chartSubFiltered]._mapcolors)
-            }                      
-            if(this._filterOn===false){
-                mapData.forEach(function(d){
-                    if(ld._chartFiltered==-1){
-                        var color = parent._colors[parent._colorAccessor(d,max,i)];
-                    } else {
-                        if(ld._chartSubFiltered==-1){
-                            var color = ld._chartRegister[ld._chartFiltered]._mapcolors[parent._colorAccessor(d,max,i)];
-                        } else {
-                            var color = mergeColors[parent._colorAccessor(d,max,i)];
-                        }
-                    }
-                    console.log('key:'+d.key+',value:'+d.value+',color:'+color);
-                    d3.selectAll('#dgmap'+d.key).attr('fill',color).attr('stroke-opacity',0.8).attr('fill-opacity',0.8);
-                    i++;
-                });
+                ld._updateLegend(mergeColors,max);
             } else {
-                mapData.forEach(function(d){
-                    if(ld._chartFiltered==-1){
-                        var color = parent._colors[parent._colorAccessor(d,max,i)];
-                    } else {
+                if(ld._chartFiltered == -1){
+                    ld._updateLegend(parent._colors,max);
+                } else {
+                    ld._updateLegend(ld._chartRegister[ld._chartFiltered]._mapcolors,max);
+                }
+            }                     
+
+            mapData.forEach(function(d){
+                if(ld._chartFiltered==-1){
+                    var color = parent._colors[parent._colorAccessor(d,max,i)];
+                } else {
+                    if(ld._chartSubFiltered==-1){
                         var color = ld._chartRegister[ld._chartFiltered]._mapcolors[parent._colorAccessor(d,max,i)];
+                    } else {
+                        var color = mergeColors[parent._colorAccessor(d,max,i)];
                     }
+                }
+   
+                if(parent._filterOn===false){                    
+                    d3.selectAll('#dgmap'+d.key).attr('fill',color).attr('stroke-opacity',0.8).attr('fill-opacity',0.8);
+                } else {
                     if(parent._filters.indexOf(d.key) > -1){
                         d3.selectAll('#dgmap'+d.key).attr('fill',color).attr('stroke-opacity',0.8).attr('fill-opacity',0.8);
                     } else {
                         d3.selectAll('#dgmap'+d.key).attr('fill','grey').attr('stroke-opacity',0.8).attr('fill-opacity',0.8);
                     }
-                    i++;
-                });
-            }
+                }
+                i++;
+            });
         };
                         
 
@@ -703,7 +867,7 @@ var ld = {
         };
 
         this.init = function(){
-            this._initMap(this._id,this._geojson,this._center,this._zoom,this._joinAttr);
+            this._initMap(this._id,this._geojson,this._center,this._zoom,this._joinAttr,this._infoAttr);
             this.update();
         };
     }

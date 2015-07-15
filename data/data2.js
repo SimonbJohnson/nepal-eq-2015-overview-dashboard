@@ -77,7 +77,7 @@ var data2 = [
   {
     "#adm3+code":"524 2 04 22",
     "#impact":"Houses_Partially_Destroyed",
-    "#x_value":null
+    "#x_value":0
   },
   {
     "#adm3+code":"524 3 07 36",
@@ -157,7 +157,7 @@ var data2 = [
   {
     "#adm3+code":"524 2 04 17",
     "#impact":"Houses_Partially_Destroyed",
-    "#x_value":null
+    "#x_value":0
   },
   {
     "#adm3+code":"524 3 07 40",
@@ -222,7 +222,7 @@ var data2 = [
   {
     "#adm3+code":"524 4 11 57",
     "#impact":"Houses_Fully_Destroyed",
-    "#x_value":null
+    "#x_value":0
   },
   {
     "#adm3+code":"524 4 11 57",
@@ -292,7 +292,7 @@ var data2 = [
   {
     "#adm3+code":"524 4 12 64",
     "#impact":"Houses_Fully_Destroyed",
-    "#x_value":null
+    "#x_value":0
   },
   {
     "#adm3+code":"524 4 12 64",
@@ -312,22 +312,22 @@ var data2 = [
   {
     "#adm3+code":"524 1 02 05",
     "#impact":"Houses_Fully_Destroyed",
-    "#x_value":null
+    "#x_value":0
   },
   {
     "#adm3+code":"524 1 02 05",
     "#impact":"Houses_Partially_Destroyed",
-    "#x_value":null
+    "#x_value":0
   },
   {
     "#adm3+code":"524 1 02 06",
     "#impact":"Houses_Fully_Destroyed",
-    "#x_value":null
+    "#x_value":0
   },
   {
     "#adm3+code":"524 1 02 06",
     "#impact":"Houses_Partially_Destroyed",
-    "#x_value":null
+    "#x_value":0
   },
   {
     "#adm3+code":"524 1 01 03",
@@ -337,7 +337,7 @@ var data2 = [
   {
     "#adm3+code":"524 1 01 03",
     "#impact":"Houses_Partially_Destroyed",
-    "#x_value":null
+    "#x_value":0
   },
   {
     "#adm3+code":"524 1 01 02",
@@ -437,7 +437,7 @@ var data2 = [
   {
     "#adm3+code":"524 3 09 47",
     "#impact":"Houses_Partially_Destroyed",
-    "#x_value":null
+    "#x_value":0
   },
   {
     "#adm3+code":"524 3 08 42",
@@ -452,7 +452,7 @@ var data2 = [
   {
     "#adm3+code":"524 1 03 16",
     "#impact":"Houses_Fully_Destroyed",
-    "#x_value":null
+    "#x_value":0
   },
   {
     "#adm3+code":"524 1 03 16",
@@ -462,7 +462,7 @@ var data2 = [
   {
     "#adm3+code":"524 1 01 04",
     "#impact":"Houses_Fully_Destroyed",
-    "#x_value":null
+    "#x_value":0
   },
   {
     "#adm3+code":"524 1 01 04",
@@ -477,12 +477,12 @@ var data2 = [
   {
     "#adm3+code":"524 2 06 33",
     "#impact":"Houses_Partially_Destroyed",
-    "#x_value":null
+    "#x_value":0
   },
   {
     "#adm3+code":"524 2 06 32",
     "#impact":"Houses_Fully_Destroyed",
-    "#x_value":null
+    "#x_value":0
   },
   {
     "#adm3+code":"524 2 06 32",
@@ -512,7 +512,7 @@ var data2 = [
   {
     "#adm3+code":"524 2 06 34",
     "#impact":"Houses_Fully_Destroyed",
-    "#x_value":null
+    "#x_value":0
   },
   {
     "#adm3+code":"524 2 06 34",
@@ -522,12 +522,12 @@ var data2 = [
   {
     "#adm3+code":"524 2 04 19",
     "#impact":"Houses_Fully_Destroyed",
-    "#x_value":null
+    "#x_value":0
   },
   {
     "#adm3+code":"524 2 04 19",
     "#impact":"Houses_Partially_Destroyed",
-    "#x_value":null
+    "#x_value":0
   },
   {
     "#adm3+code":"524 3 08 44",

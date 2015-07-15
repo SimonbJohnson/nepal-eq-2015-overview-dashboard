@@ -77,12 +77,12 @@ var data3 = [
   {
     "#adm3+code":"524 2 05 26",
     "#activity":"tarps",
-    "#x_value":6611
+    "#x_value":7443
   },
   {
     "#adm3+code":"524 2 05 26",
     "#activity":"blankets",
-    "#x_value":700
+    "#x_value":2264
   },
   {
     "#adm3+code":"524 2 05 26",
@@ -92,7 +92,7 @@ var data3 = [
   {
     "#adm3+code":"524 2 05 26",
     "#activity":"hygiene_kits",
-    "#x_value":670
+    "#x_value":920
   },
   {
     "#adm3+code":"524 2 05 26",
@@ -617,7 +617,7 @@ var data3 = [
   {
     "#adm3+code":"524 2 06 31",
     "#activity":"hygiene_kits",
-    "#x_value":325
+    "#x_value":505
   },
   {
     "#adm3+code":"524 2 06 31",

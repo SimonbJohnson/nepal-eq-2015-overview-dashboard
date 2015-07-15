@@ -14,7 +14,19 @@ data3.forEach(function(e){
     e['#adm3+code'] = e['#adm3+code'].replace(/ /g,'_');
 });
 
-var relations = {'ldgraph_2':['graph1','ldgraph_1']};
+data4.forEach(function(e){
+    e['#adm3+code'] = e['#adm3+code'].replace(/ /g,'_');
+});
+
+data5.forEach(function(e){
+    e['#adm3+code'] = e['#adm3+code'].replace(/ /g,'_');
+});
+
+var relations = {'distributions':['affected_people','affected_households','affected_families','volunteers'],
+                'volunteers':['affected_people','affected_households','affected_families','distributions'],
+                'affected_people':['distributions','volunteers'],
+                'affected_households':['distributions','volunteers'],
+                'affected_families':['distributions','volunteers']};
 
 ld.relations(relations);
 
@@ -22,34 +34,59 @@ var dashmap = new ld.map('#map')
         .geojson(nepal_adm3)
         .center([28.3,83.7])
         .zoom(6)
-        .joinAttr('HLCIT_CODE');
+        .joinAttr('HLCIT_CODE')
+        .infoAttr('DISTRICT');
 
 var rowChart1 = new ld.rowGraph('#graph1').data(data)
-        .name('graph1')
+        .name('affected_people')
         .place('#adm3+code')
         .type('#affected')
         .values('#x_value')
         .width($('#graph1').width())
-        .height(180)
-        .barcolor('#9C27B0')
+        .height(130)
+        .barcolor('#B71C1C')
         .elasticY(true);
 
 var rowChart2 = new ld.rowGraph('#graph2').data(data2)
+        .name('affected_households')
         .place('#adm3+code')
         .type('#impact')
         .values('#x_value')
         .width($('#graph2').width())
-        .height(130)
-        .barcolor('#FF8F00')
+        .height(100)
+        .barcolor('#B71C1C')
         .elasticY(true);
 
 var rowChart3 = new ld.rowGraph('#graph3').data(data3)
+        .name('distributions')
         .place('#adm3+code')
         .type('#activity')
         .values('#x_value')
         .width($('#graph3').width())
-        .height(350)
-        .barcolor('#2E7D32')
+        .height(260)
+        .barcolor('#1B5E20')
         .elasticY(true);
 
+var rowChart4 = new ld.rowGraph('#graph4').data(data4)
+        .name('affected_families')
+        .place('#adm3+code')
+        .type('#affected')
+        .values('#x_value')
+        .width($('#graph4').width())
+        .height(100)
+        .barcolor('#B71C1C')
+        .elasticY(true);
+
+var rowChart5 = new ld.rowGraph('#graph5').data(data5)
+        .name('volunteers')
+        .place('#adm3+code')
+        .type('#capacity')
+        .values('#x_value')
+        .width($('#graph5').width())
+        .height(300)
+        .barcolor('#1A237E')
+        .elasticY(true);                   
+
+ld.titleDiv('#maptitle');
+ld.legendDiv('#legend');
 ld.init();
