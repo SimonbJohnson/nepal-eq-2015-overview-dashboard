@@ -3,6 +3,8 @@ var ld = {
     _chartRegister :[],
     _mapRegister:[],
     _chartFiltered:-1,
+    _chartSubFiltered:-1,
+    _relations:{},
     
     init: function(){
         ld._chartRegister.forEach(function(e){
@@ -14,6 +16,8 @@ var ld = {
     },
     
     updateAll: function(){
+        console.log(ld._chartFiltered);
+        console.log(ld._chartSubFiltered);
         ld._chartRegister.forEach(function(chart){
            chart.update(); 
         });
@@ -31,6 +35,28 @@ var ld = {
         //return d3.rgb(color).brighter(4-scale).toString();
     },
 
+    colorMerge: function(color1,color2){
+        var newColors = [];
+        for(var i=0;i<5;i++){
+            var c1 = d3.rgb(color1[i]);
+            var c2 = d3.rgb(color2[i]);
+            console.log(color1[i]);
+            console.log(color2[i])
+            console.log(d3.rgb(Math.floor((c1.r+c2.r)/2),Math.floor((c1.g+c2.g)/2),Math.floor((c1.b+c2.b)/2)).toString());
+            newColors.push(d3.rgb(Math.floor((c1.r+c2.r)/2),Math.floor((c1.g+c2.g)/2),Math.floor((c1.b+c2.b)/2)).toString());
+        }
+        return newColors;
+    },
+
+    relations: function(val){
+            if(typeof val === 'undefined'){
+                return this._relations;
+            } else {
+                this._relations=val;
+                return this;
+            }        
+        },
+
     rowGraph: function(id){
 
         this._height=300;
@@ -43,11 +69,15 @@ var ld = {
         this._values = "";
         this._barcolor = "#0091EA";
         this._mapcolors = [];
-        this._fontcolor = "white";
+        this._fontcolor = "black";
+        this._fontSize = "0.8em"
         this._textShift = 20;
         this._filterOn = false;
         this._filters = [];
-        this._ref = ld._chartRegister.length;    
+        this._elasticY = false;
+        this._ref = ld._chartRegister.length;
+        this._name = 'ldgraph_'+ this._ref;
+        this_subFilter = false;
 
         ld._chartRegister.push(this);
 
@@ -65,6 +95,15 @@ var ld = {
                 return this._width;
             } else {
                 this._width=val;
+                return this;
+            }        
+        };
+
+        this.name = function(val){
+            if(typeof val === 'undefined'){
+                return this._name;
+            } else {
+                this._name=val;
                 return this;
             }        
         };
@@ -121,7 +160,16 @@ var ld = {
                 this._mapcolors=val;
                 return this;
             }        
-        };                  
+        };
+
+        this.elasticY = function(val){
+            if(typeof val === 'undefined'){
+                return this._elasticY;
+            } else {
+                this._elasticY=val;
+                return this;
+            }        
+        };                            
 
         this.init= function(){
             this.cf = this._initCrossfilter(this._data,this._place,this._type,this._values);
@@ -144,7 +192,7 @@ var ld = {
 
         this._render = function(id,data){       
 
-            this._properties.margin = {top: 20, right: 20, bottom: 20, left: 20};
+            this._properties.margin = {top: 20, right: 50, bottom: 20, left: 75};
             this._properties.width = this._width - this._properties.margin.left - this._properties.margin.right;
             this._properties.height = this._height - this._properties.margin.top - this._properties.margin.bottom;      
 
@@ -160,25 +208,26 @@ var ld = {
                 .attr('width', this._width)
                 .attr('height', this._height)
                 .append("g")
-                .attr("transform", "translate(" + this._properties.margin.left + "," + this._properties.margin.left + ")");        
+                .attr("transform", "translate(" + this._properties.margin.left + "," + this._properties.margin.top + ")");        
 
             var _parent = this;
-            
-            _chart.append("g").selectAll("rect")
-                .data(data)
-                .enter().append("rect")
-                .attr("x", 0)
-                .attr("y", function(d){;
-                    return _parent._properties.y(d.key);
-                })
-                .attr("width", function(d){
-                    return _parent._properties.x(d.value);
-                })
-                .attr("height", _parent._properties.y.rangeBand()-1)
-                .attr("fill","#dddddd")
-                .on("click",function(d){
-                    _parent._filter(d.key);
-                });
+            if(!this._elasticY){
+                _chart.append("g").selectAll("rect")
+                    .data(data)
+                    .enter().append("rect")
+                    .attr("x", 0)
+                    .attr("y", function(d){;
+                        return _parent._properties.y(d.key);
+                    })
+                    .attr("width", function(d){
+                        return _parent._properties.x(d.value);
+                    })
+                    .attr("height", _parent._properties.y.rangeBand()-1)
+                    .attr("fill","#dddddd")
+                    .on("click",function(d){
+                        _parent._filter(d.key);
+                    });
+            }
 
             _chart.append("g").selectAll("rect")
                 .data(data)
@@ -200,48 +249,74 @@ var ld = {
                     _parent._filter(d.key);
                 });
 
-            var g = _chart.append("g") 
            
-            _chart.selectAll("text")
+            _chart.append("g").selectAll("text")
                 .data(data)
                 .enter().append("text")
                 .text(function(d) {
-                     return d.key +' ('+d.value+')';
+                    if(d.key.length>12){
+                        return d.key.substring(0,10)+'...';
+                    } else {
+                        return d.key;
+                    }
                 })        
                 .attr("x", function(d) {
-                    return 5;
+                    return 5-_parent._properties.margin.left;
                 })
                 .attr("y", function(d) {
                     return _parent._properties.y(d.key)+_parent._textShift;
                 })
                 .attr("fill",this._fontcolor)
+                .style("font-size",this._fontSize)
                 .attr("class","clickable textlabel")
                 .on("click",function(d){
                     _parent._filter(d.key);
                 });
 
-            
-            var texts = _chart.selectAll(".textlabel");
-
-            texts[0].forEach(function(t){
-                g.append("rect").attr("x",t.getBBox().x).attr("y",t.getBBox().y).attr("width",t.getBBox().width).attr("height",t.getBBox().height).attr("fill",ld.colorScale(_parent._barcolor,2));
-            })
-            
+            _chart.append("g").selectAll("text")
+                .data(data)
+                .enter().append("text")
+                .text(function(d) {
+                    return d.value;
+                })        
+                .attr("x", function(d) {
+                    return _parent._properties.x(d.value)+5;
+                })
+                .attr("y", function(d) {
+                    return _parent._properties.y(d.key)+_parent._textShift;
+                })
+                .attr("fill",this._fontcolor)
+                .style("font-size",this._fontSize)
+                .attr("class","clickable textlabel textvalue")
+                .on("click",function(d){
+                    _parent._filter(d.key);
+                });                
         };
 
         this._filter = function(filter){
-                ld._chartFiltered = this._ref;
+                if(ld._chartFiltered!=-1){
+                    if(this._inRelations(this._name,ld._chartRegister[ld._chartFiltered]._name)){
+                        ld._chartSubFiltered = this._ref;
+                        this._filterOn = true;
+                        this._subFilter = true;
+                    } else {
+                        ld._chartFiltered = this._ref;
+                        ld._chartSubFiltered = -1;
+                    }
+                } else {
+                    ld._chartFiltered = this._ref;
+                    ld._chartSubFiltered = -1;
+                }
 
                 //will need to adjust later on to accept chart relationship map
                 //when you come back to this need to adjust addcf function on maps next to add right charts
-
                 ld._chartRegister.forEach(function(chart){
-                    if(chart._ref!=ld._chartFiltered){
+                    if(chart._ref!=ld._chartFiltered && chart._ref!=ld._chartSubFiltered){
                         chart.cf.typeDimension.filterAll();
                         chart._filters=[];
+                        chart._filterOn = false;
                     }
                 });
-
                 var index = this._filters.indexOf(filter);
                 if(index===-1){
                     this._filters.push(filter);
@@ -251,7 +326,13 @@ var ld = {
                 }
                 if(this._filters.length===0){
                     this._filterOn = false;
-                    ld._chartFiltered=-1;
+                    if(this._subFilter){
+                        ld._chartSubFiltered=-1;
+                        this._subFilter = false;
+                    } else {
+                        ld._chartSubFiltered=-1;
+                        ld._chartFiltered=-1;
+                    }                    
                 }
 
                 var _parent = this;
@@ -278,23 +359,47 @@ var ld = {
                 if(ld._chartFiltered == -1){
                     d3.selectAll('.bar'+this._ref).attr('fill',this._barcolor);
                 } else {
-                    d3.selectAll('.bar'+this._ref).attr('fill','#dddddd');
+                    if(this._inRelations(this._name,ld._chartRegister[ld._chartFiltered]._name)){
+                        d3.selectAll('.bar'+this._ref).attr('fill',this._mapcolors[1]);
+                    } else {
+                        d3.selectAll('.bar'+this._ref).attr('fill','#dddddd');
+                    }
                 }
+            }
+            if(this._elasticY){
+                this._properties.x = d3.scale.linear()           
+                    .range([0, this._properties.width]).domain([0, d3.max(this.cf.typeGroup.all(),function(d){return d.value;})]);                
             }
             var _parent = this;
             d3.select(this._id).selectAll('.dashgraph-bar').data(this.cf.typeGroup.all())
             .transition().attr('width', function(d,i){
                     return _parent._properties.x(d.value);
                 });
-            d3.select(this._id).selectAll('text').data(this.cf.typeGroup.all())
+            d3.select(this._id).selectAll('.textvalue').data(this.cf.typeGroup.all())
                 .text(function(d) {
-                     return d.key +' ('+d.value+')';
-                })   
-        }
+                     return d.value;
+                })
+                .attr("x", function(d) {
+                    return _parent._properties.x(d.value)+5;
+                });  
+        };
 
         this._genMapColors = function(){
             return ['#cccccc',ld.colorScale(this._barcolor,1),ld.colorScale(this._barcolor,2),ld.colorScale(this._barcolor,3),ld.colorScale(this._barcolor,4)];
-        }
+        };
+
+        this._inRelations = function(thisgraph,parentgraph){
+            if(ld._relations[parentgraph]==undefined){
+                return false;
+            } else {
+                if(ld._relations[parentgraph].indexOf(thisgraph)>-1){
+                    return true;
+                } else {
+                    return false;
+                }
+
+            }
+        }   
     },
 
     map:function (id){
@@ -304,7 +409,7 @@ var ld = {
         this._center = [0,0];
         this._zoom = 1;
         this._joinAttr = "";
-        this._colors = ['#CCCCCC','#80D8FF','#40C4FF','#00B0FF','#0091EA'];
+        this._colors = ['#CCCCCC','#81D4FA','#29B6F6','#0288D1','#01579B'];
         this._filterOn = false;
         this._filters = [];
 
@@ -450,19 +555,32 @@ var ld = {
                     mapData = parent._addCF(mapData,chart.cf.placeGroup.all());
                 });
             } else {
-                mapData = ld._chartRegister[ld._chartFiltered].cf.placeGroup.all();
+                if(ld._chartSubFiltered ==-1)
+                    mapData = ld._chartRegister[ld._chartFiltered].cf.placeGroup.all();
+                else {
+                    mapData = parent._divideCF(ld._chartRegister[ld._chartFiltered].cf.placeGroup.all(),ld._chartRegister[ld._chartSubFiltered].cf.placeGroup.all());
+                }
             }
             var i = 0;
             var max = d3.max(mapData,function(d){
                 return d.value;
-            });            
+            });
+            var mergeColors = [];
+            if(ld._chartSubFiltered!=-1){
+                mergeColors = ld.colorMerge(ld._chartRegister[ld._chartFiltered]._mapcolors,ld._chartRegister[ld._chartSubFiltered]._mapcolors)
+            }                      
             if(this._filterOn===false){
                 mapData.forEach(function(d){
                     if(ld._chartFiltered==-1){
                         var color = parent._colors[parent._colorAccessor(d,max,i)];
                     } else {
-                        var color = ld._chartRegister[ld._chartFiltered]._mapcolors[parent._colorAccessor(d,max,i)];
+                        if(ld._chartSubFiltered==-1){
+                            var color = ld._chartRegister[ld._chartFiltered]._mapcolors[parent._colorAccessor(d,max,i)];
+                        } else {
+                            var color = mergeColors[parent._colorAccessor(d,max,i)];
+                        }
                     }
+                    console.log('key:'+d.key+',value:'+d.value+',color:'+color);
                     d3.selectAll('#dgmap'+d.key).attr('fill',color).attr('stroke-opacity',0.8).attr('fill-opacity',0.8);
                     i++;
                 });
@@ -502,6 +620,37 @@ var ld = {
             return data;
         };
 
+        this._divideCF = function(data1,data2){
+            var newdata = [];
+            data1.forEach(function(d){
+                var found = false;
+                var i = 0;
+                while(found===false && i<data2.length){
+                    if(d.key === data2[i].key){
+                        if(data2[i].value!=0){
+                            newdata.push({key:d.key,value:d.value/data2[i].value});
+                            found =true;
+                        }
+                    }
+                    i++;
+                }
+            });
+            data2.forEach(function(d){
+                var found = false;
+                var i = 0;
+                while(found===false && i<data1.length){
+                    if(d.key === data1[i].key){
+                        found =true;
+                    }
+                    i++;
+                }
+                if(!found){
+                    newdata.push({key:d.key,value:0})
+                }                
+            });
+            return newdata;
+        }
+
         this._oldaddCF = function (data,newdata){
             if(data.length>0){
                 data.forEach(function(d){
@@ -537,8 +686,8 @@ var ld = {
         
         this._colorAccessor = function (d,max,i){
             if(d.value>0){
-                value = Math.log(d.value);
-                return Math.floor(value*4/Math.log(max+1))+1;
+                value = Math.log(d.value+1);
+                return Math.floor(value*4/Math.log(max+2))+1;
             } else {
                 return 0;
             }
