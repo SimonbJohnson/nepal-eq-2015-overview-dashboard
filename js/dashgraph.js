@@ -488,6 +488,7 @@ var ld = {
         this._zoom = 1;
         this._joinAttr = "";
         this._colors = ['#CCCCCC','#81D4FA','#29B6F6','#0288D1','#01579B'];
+        this._mergeColors = ['#CCCCCC','#FFECB3','#FFC107','#FFA000','#FF6F00'];
         this._filterOn = false;
         this._filters = [];
         this._currentData = [];
@@ -551,7 +552,25 @@ var ld = {
                 this._colorAccessor=val;
                 return this;
             }        
-        };                
+        };
+
+        this.mergeColors = function(val){
+            if(typeof val === 'undefined'){
+                return this._mergeColors;
+            } else {
+                this._mergeColors=val;
+                return this;
+            }        
+        };
+
+        this.colors = function(val){
+            if(typeof val === 'undefined'){
+                return this._colors;
+            } else {
+                this._colors=val;
+                return this;
+            }        
+        };                                
 
         this._initMap = function(id,geojson, center, zoom, joinAttr, infoAttr){
             
@@ -731,7 +750,8 @@ var ld = {
             });
             var mergeColors = [];
             if(ld._chartSubFiltered!=-1){
-                mergeColors = ld.colorMerge(ld._chartRegister[ld._chartFiltered]._mapcolors,ld._chartRegister[ld._chartSubFiltered]._mapcolors)
+                //mergeColors = ld.colorMerge(ld._chartRegister[ld._chartFiltered]._mapcolors,ld._chartRegister[ld._chartSubFiltered]._mapcolors)
+                mergeColors = parent._mergeColors;
                 ld._updateLegend(mergeColors,max);
             } else {
                 if(ld._chartFiltered == -1){
