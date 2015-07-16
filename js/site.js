@@ -45,7 +45,7 @@ var rowChart1 = new ld.rowGraph('#graph1').data(data)
         .width($('#graph1').width())
         .height(130)
         .barcolor('#D32F2F')
-        .elasticY(true);
+        .elasticX(true);
 
 var rowChart2 = new ld.rowGraph('#graph2').data(data2)
         .name('affected_households')
@@ -55,7 +55,7 @@ var rowChart2 = new ld.rowGraph('#graph2').data(data2)
         .width($('#graph2').width())
         .height(100)
         .barcolor('#D32F2F')
-        .elasticY(true);
+        .elasticX(true);
 
 var rowChart3 = new ld.rowGraph('#graph3').data(data3)
         .name('distributions')
@@ -65,7 +65,7 @@ var rowChart3 = new ld.rowGraph('#graph3').data(data3)
         .width($('#graph3').width())
         .height(260)
         .barcolor('#2E7D32')
-        .elasticY(true);
+        .elasticX(true);
 
 var rowChart4 = new ld.rowGraph('#graph4').data(data4)
         .name('affected_families')
@@ -75,7 +75,7 @@ var rowChart4 = new ld.rowGraph('#graph4').data(data4)
         .width($('#graph4').width())
         .height(100)
         .barcolor('#D32F2F')
-        .elasticY(true);
+        .elasticX(true);
 
 var rowChart5 = new ld.rowGraph('#graph5').data(data5)
         .name('volunteers')
@@ -85,7 +85,7 @@ var rowChart5 = new ld.rowGraph('#graph5').data(data5)
         .width($('#graph5').width())
         .height(300)
         .barcolor('#4527A0')
-        .elasticY(true);                   
+        .elasticX(true);                   
 
 ld.titleDiv('#maptitle');
 ld.legendDiv('#legend');
