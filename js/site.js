@@ -22,11 +22,11 @@ data5.forEach(function(e){
     e['#adm3+code'] = e['#adm3+code'].replace(/ /g,'_');
 });
 
-var relations = {'distributions':['affected_people','affected_households','affected_families','volunteers'],
-                'volunteers':['affected_people','affected_households','affected_families','distributions'],
-                'affected_people':['distributions','volunteers'],
-                'affected_households':['distributions','volunteers'],
-                'affected_families':['distributions','volunteers']};
+var relations = {'distributions':[{graph:'affected_people',operation:'/'},{graph:'affected_households',operation:'/'},{graph:'affected_families',operation:'/'},{graph:'volunteers',operation:'/'}],
+                'volunteers':[{graph:'affected_people',operation:'/'},{graph:'affected_households',operation:'/'},{graph:'affected_families',operation:'/'},{graph:'distributions',operation:'/'}],
+                'affected_people':[{graph:'distributions',operation:'-'},{graph:'volunteers',operation:'/'}],
+                'affected_households':[{graph:'distributions',operation:'-'},{graph:'volunteers',operation:'/'}],
+                'affected_families':[{graph:'distributions',operation:'-'},{graph:'volunteers',operation:'/'}]};
 
 ld.relations(relations);
 
