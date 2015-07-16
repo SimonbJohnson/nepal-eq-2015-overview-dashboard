@@ -97,7 +97,7 @@ var ld = {
             var prev=0;
             for(i=1;i<5;i++){
                 d3.select('#ldl' + i + 'box').style('background-color',color[i]);
-                d3.select('#ldl' + i + 'text').html((prev+0.1).toFixed(1) + ' - ' + (Math.exp(((i) * Math.log(max+2))/4)-1).toFixed(1));
+                d3.select('#ldl' + i + 'text').html((prev+0.01).toFixed(2) + ' - ' + (Math.exp(((i) * Math.log(max+2))/4)-1).toFixed(2));
                 prev = Math.exp(((i) * Math.log(max+2))/4)-1;      
             }
         }
