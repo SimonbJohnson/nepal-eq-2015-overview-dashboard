@@ -73,7 +73,8 @@ var ld = {
                     var title = 'Map of ' + filters;
                 } else {
                     var subfilters = this._chartRegister[this._chartSubFiltered].printFilters();
-                    var title = 'Map of (' + filters + ') / (' + subfilters + ')';                
+                    var operation = ld.getRelationOperation(ld._chartRegister[ld._chartSubFiltered]._name,ld._chartRegister[ld._chartFiltered]._name);
+                    var title = 'Map of (' + filters + ') ' + operation + ' (' + subfilters + ')';                
                 }
             }
             d3.select(this._titleDiv).html(title);
@@ -97,8 +98,8 @@ var ld = {
             var prev=0;
             for(i=1;i<5;i++){
                 d3.select('#ldl' + i + 'box').style('background-color',color[i]);
-                d3.select('#ldl' + i + 'text').html((prev+0.1).toFixed(1) + ' - ' + (Math.exp(((i) * Math.log(max+2))/4)-1).toFixed(1));
-                prev = Math.exp(((i) * Math.log(max+2))/4)-1;      
+                d3.select('#ldl' + i + 'text').html((prev+0.01).toFixed(2) + ' - ' + (Math.exp(((i) * Math.log((max+1)*1.01))/4)-1).toFixed(2));
+                prev = Math.exp(((i) * Math.log((max+1)*1.01))/4)-1;      
             }
         }
     },
@@ -111,15 +112,15 @@ var ld = {
         return color.toString();
     },
 
-    colorMerge: function(color1,color2){
-        var newColors = [];
-        for(var i=0;i<5;i++){
-            var c1 = d3.rgb(color1[i]);
-            var c2 = d3.rgb(color2[i]);
-            newColors.push(d3.rgb(Math.floor((c1.r+c2.r)/2),Math.floor((c1.g+c2.g)/2),Math.floor((c1.b+c2.b)/2)).toString());
-        }
-        return newColors;
-    },  
+    getRelationOperation: function(thisgraph,parentgraph){
+        var operation
+        ld._relations[parentgraph].forEach(function(g){
+            if(g.graph==thisgraph){
+                operation = g.operation;
+            }
+        });
+        return operation;    
+    },    
 
     rowGraph: function(id){
 
@@ -373,8 +374,6 @@ var ld = {
                     ld._chartSubFiltered = -1;
                 }
 
-                //will need to adjust later on to accept chart relationship map
-                //when you come back to this need to adjust addcf function on maps next to add right charts
                 ld._chartRegister.forEach(function(chart){
                     if(chart._ref!=ld._chartFiltered && chart._ref!=ld._chartSubFiltered){
                         chart.cf.typeDimension.filterAll();
@@ -456,12 +455,13 @@ var ld = {
             if(ld._relations[parentgraph]==undefined){
                 return false;
             } else {
-                if(ld._relations[parentgraph].indexOf(thisgraph)>-1){
-                    return true;
-                } else {
-                    return false;
-                }
-
+                var found = false;
+                ld._relations[parentgraph].forEach(function(g){
+                    if(g.graph==thisgraph){
+                        found = true;
+                    }
+                });
+                return found;    
             }
         };
 
@@ -488,6 +488,7 @@ var ld = {
         this._zoom = 1;
         this._joinAttr = "";
         this._colors = ['#CCCCCC','#81D4FA','#29B6F6','#0288D1','#01579B'];
+        this._mergeColors = ['#CCCCCC','#FFECB3','#FFC107','#FFA000','#FF6F00'];
         this._filterOn = false;
         this._filters = [];
         this._currentData = [];
@@ -551,7 +552,25 @@ var ld = {
                 this._colorAccessor=val;
                 return this;
             }        
-        };                
+        };
+
+        this.mergeColors = function(val){
+            if(typeof val === 'undefined'){
+                return this._mergeColors;
+            } else {
+                this._mergeColors=val;
+                return this;
+            }        
+        };
+
+        this.colors = function(val){
+            if(typeof val === 'undefined'){
+                return this._colors;
+            } else {
+                this._colors=val;
+                return this;
+            }        
+        };                                
 
         this._initMap = function(id,geojson, center, zoom, joinAttr, infoAttr){
             
@@ -718,20 +737,23 @@ var ld = {
                     this._filterData = mapData;
                     this._subData = [];
                 } else {
-                    mapData = parent._divideCF(ld._chartRegister[ld._chartFiltered].cf.placeGroup.all(),ld._chartRegister[ld._chartSubFiltered].cf.placeGroup.all());
-                
-                    this._currentData = mapData;
-                    this._filterData = ld._chartRegister[ld._chartFiltered].cf.placeGroup.all();
-                    this._subData = ld._chartRegister[ld._chartSubFiltered].cf.placeGroup.all();
+                    if(ld.getRelationOperation(ld._chartRegister[ld._chartSubFiltered]._name,ld._chartRegister[ld._chartFiltered]._name)=='-'){
+                        mapData = parent._minusCF(ld._chartRegister[ld._chartFiltered].cf.placeGroup.all(),ld._chartRegister[ld._chartSubFiltered].cf.placeGroup.all());
+                    } else {
+                        mapData = parent._divideCF(ld._chartRegister[ld._chartFiltered].cf.placeGroup.all(),ld._chartRegister[ld._chartSubFiltered].cf.placeGroup.all());
+                    }
+                        this._currentData = mapData;
+                        this._filterData = ld._chartRegister[ld._chartFiltered].cf.placeGroup.all();
+                        this._subData = ld._chartRegister[ld._chartSubFiltered].cf.placeGroup.all();                    
                 }
-            }           
+            }            
             var i = 0;
             var max = d3.max(mapData,function(d){
                 return d.value;
             });
             var mergeColors = [];
             if(ld._chartSubFiltered!=-1){
-                mergeColors = ld.colorMerge(ld._chartRegister[ld._chartFiltered]._mapcolors,ld._chartRegister[ld._chartSubFiltered]._mapcolors)
+                mergeColors = parent._mergeColors;
                 ld._updateLegend(mergeColors,max);
             } else {
                 if(ld._chartFiltered == -1){
@@ -815,43 +837,46 @@ var ld = {
             return newdata;
         }
 
-        this._oldaddCF = function (data,newdata){
-            if(data.length>0){
-                data.forEach(function(d){
-                    d.values.push(0);
-                });
-                var length = data[0].values.length-1;
-                newdata.forEach(function(d){
-                    var found = false;
-                    var i = 0;
-                    while(found===false && i<data.length){
-                        if(d.key === data[i].key){
-                            data[i].values[length]=d.value;
-                            found =true;
-                        }
-                        i++;
+        this._minusCF = function(data1,data2){
+            var newdata = [];
+            data1.forEach(function(d){
+                var found = false;
+                var i = 0;
+                var value = 0;
+                while(found===false && i<data2.length){
+                    if(d.key === data2[i].key){
+                        value = d.value - data2[i].value
+                        found =true;
+
                     }
-                    if(found===false){
-                        var valueslist = [];
-                        for (i = 0; i <= length-1; i++) { 
-                            valueslist.push(0);
-                        }
-                        valueslist.push(d.value);
-                        data.push({key:d.key,values:valueslist});
+                    if(found == false){
+                        value = d.value;
                     }
-                });
-            } else {
-                newdata.forEach(function(d){
-                    data.push({key:d.key,values:[d.value]});
-                });
-            }
-            return data;
-        };
+                    i++;
+                }
+                if(value<0){value=0}
+                newdata.push({key:d.key,value:value});
+            });
+            data2.forEach(function(d){
+                var found = false;
+                var i = 0;
+                while(found===false && i<data1.length){
+                    if(d.key === data1[i].key){
+                        found =true;
+                    }
+                    i++;
+                }
+                if(!found){
+                    newdata.push({key:d.key,value:0})
+                }                
+            });
+            return newdata;
+        } 
         
         this._colorAccessor = function (d,max,i){
             if(d.value>0){
                 value = Math.log(d.value+1);
-                return Math.floor(value*4/Math.log(max+2))+1;
+                return Math.floor(value*4/Math.log((max+1)*1.01))+1;
             } else {
                 return 0;
             }
