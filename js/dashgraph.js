@@ -1,10 +1,4 @@
-// todo 
-// legend
-// check filters accept spaces
-// mouse over info box
-// new color accessor
-// comment code and push to library
-
+/** @namespace ld*/
 var ld = {
 
     _chartRegister :[],
@@ -15,32 +9,13 @@ var ld = {
     _titleDiv: '',
     _legendDiv:'',
 
-    relations: function(val){
-            if(typeof val === 'undefined'){
-                return this._relations;
-            } else {
-                this._relations=val;
-                return this;
-            }        
-        },
-
-    titleDiv: function(val){
-            if(typeof val === 'undefined'){
-                return this._titleDiv;
-            } else {
-                this._titleDiv=val;
-                return this;
-            }        
-        },
-
-    legendDiv: function(val){
-            if(typeof val === 'undefined'){
-                return this._legendDiv;
-            } else {
-                this._legendDiv=val;
-                return this;
-            }        
-        },                   
+    /**
+    * @memberof ld
+    * @method init
+    * @description
+    * Initialises the leaflet dashboard.
+    * To be called after the map and all graphs have been declared
+    */               
     
     init: function(){
         this.updateTitle();
@@ -52,6 +27,12 @@ var ld = {
            e.init(); 
         });       
     },
+
+    /** @function updateAll
+    * @memberof ld
+    * @description
+    * Updates the map and all graphs
+    */   
     
     updateAll: function(){
         this._chartRegister.forEach(function(chart){
@@ -63,6 +44,12 @@ var ld = {
         this.updateTitle();      
     },
 
+    /** @function updateTitle
+    * @memberof ld
+    * @description
+    * Update Title div to current filters
+    */    
+
     updateTitle: function(){
         if(this._titleDiv!=''){
             if(this._chartFiltered==-1){
@@ -73,13 +60,20 @@ var ld = {
                     var title = 'Map of ' + filters;
                 } else {
                     var subfilters = this._chartRegister[this._chartSubFiltered].printFilters();
-                    var operation = ld.getRelationOperation(ld._chartRegister[ld._chartSubFiltered]._name,ld._chartRegister[ld._chartFiltered]._name);
+                    var operation = ld._getRelationOperation(ld._chartRegister[ld._chartSubFiltered]._name,ld._chartRegister[ld._chartFiltered]._name);
                     var title = 'Map of (' + filters + ') ' + operation + ' (' + subfilters + ')';                
                 }
             }
             d3.select(this._titleDiv).html(title);
         }
     },
+
+    /** @function _generateLegend
+    * @memberof ld
+    * @private
+    * @description
+    * Generates legend html content to go into declared DIV
+    */       
 
     _generateLegend: function(){
         if(this._legendDiv!=''){
@@ -90,6 +84,14 @@ var ld = {
             d3.select(this._legendDiv).html(html);
         }
     },
+
+    /** @function _updateLegend
+    * @memberof ld
+    * @private
+    * @description
+    * Updates legend for current map
+    * Reverses logarithmic scale to find legend labels
+    */      
 
     _updateLegend: function(color,max){
         if(this._legendDiv!=''){
@@ -104,7 +106,14 @@ var ld = {
         }
     },
 
-    colorScale: function(color,scale){
+    /** @function _colorScale
+    * @memberof ld
+    * @private
+    * @description
+    * Update Title div to current filters
+    */        
+
+    _colorScale: function(color,scale){
         color = d3.rgb(color);
         color.r = color.r+Math.floor((255-color.r)*(4-scale)/5)
         color.b = color.b+Math.floor((255-color.b)*(4-scale)/5)
@@ -112,7 +121,14 @@ var ld = {
         return color.toString();
     },
 
-    getRelationOperation: function(thisgraph,parentgraph){
+    /** @function _getRelationOperation
+    * @memberof ld
+    * @private
+    * @description
+    * Get the operation between the filter and subfilter
+    */     
+
+    _getRelationOperation: function(thisgraph,parentgraph){
         var operation
         ld._relations[parentgraph].forEach(function(g){
             if(g.graph==thisgraph){
@@ -120,7 +136,70 @@ var ld = {
             }
         });
         return operation;    
-    },    
+    },
+
+    /** @function relations
+    * @memberof ld
+    * @param {object} [relations] - Object describing relationships between graphs
+    * @description
+    * <p>Set the relationship of object for the graphs. If no parameter passed relations object returned</p>
+    * <p><b>Default value</b>: {}</p>
+    * <p><h4>Example object</h4></p>
+    * <p>object = {ldgraph_0:{graph:'ldgraph_1',operation:'/'}}</p>
+    * <p> This object declared that ldgraph_1 is available as a subfilter of ldgraph_0<p>
+    * <p> The data interacts by ldgraph_0 data being divived by ldgraph_1</p>
+    * <p> Current operations are divide: '/'  or minus: '-'</p>
+    */    
+
+    relations: function(val){
+            if(typeof val === 'undefined'){
+                return this._relations;
+            } else {
+                this._relations=val;
+                return this;
+            }        
+        },
+
+    /** @function titleDiv
+    * @memberof ld
+    * @param {string} [titleDiv] - ID of div for title to appear in
+    * @description
+    * <p>Set the ID of div for title to appear in. If no parameter passed titleDiv string returned</p>
+    * <p><b>Default value</b>: ''</p>
+    */            
+
+    titleDiv: function(val){
+            if(typeof val === 'undefined'){
+                return this._titleDiv;
+            } else {
+                this._titleDiv=val;
+                return this;
+            }        
+        },
+
+    /** @function legendDiv
+    * @memberof ld
+    * @param {string} [legendDiv] - ID of div for legend to appear in
+    * @description
+    * <p>Set the ID of div for legend to appear in. If no parameter passed legendDiv string returned</p>
+    * <p><b>Default value</b>: ''</p>
+    */        
+
+    legendDiv: function(val){
+            if(typeof val === 'undefined'){
+                return this._legendDiv;
+            } else {
+                this._legendDiv=val;
+                return this;
+            }        
+        },
+
+    /** @namespace rowGraph
+    * @memberof ld
+    * @param {string} [id] - ID of div for chart to appear in
+    * @description
+    * <p>var rowChart1 = new ld.rowGraph('#graph1')</p>
+    */
 
     rowGraph: function(id){
 
@@ -142,10 +221,18 @@ var ld = {
         this._elasticY = false;
         this._ref = ld._chartRegister.length;
         this._name = 'ldgraph_'+ this._ref;
-        this_subFilter = false;
+        this._subFilter = false;
 
 
         ld._chartRegister.push(this);
+
+        /** @function height
+        * @memberof ld.rowGraph
+        * @param {integer} [height] - height in pixels
+        * @description
+        * <p>Set the height of chart in pixels. If no parameter passed height integer returned</p>
+        * <p><b>Default value</b>: 300</p>
+        */         
 
         this.height = function(val){
             if(typeof val === 'undefined'){
@@ -156,6 +243,14 @@ var ld = {
             }        
         };
 
+        /** @function width
+        * @memberof ld.rowGraph
+        * @param {integer} [width] - height in pixels
+        * @description
+        * <p>Set the width of chart in pixels. If no parameter passed width integer returned</p>
+        * <p><b>Default value</b>: 300</p>
+        */
+
         this.width = function(val){
             if(typeof val === 'undefined'){
                 return this._width;
@@ -164,6 +259,14 @@ var ld = {
                 return this;
             }        
         };
+
+        /** @function name
+        * @memberof ld.rowGraph
+        * @param {integer} [name] - name of graph
+        * @description
+        * <p>Set the name of chart. This can then be used a reference in the relations object.  If no parameter passed name string returned</p>
+        * <p><b>Default value</b>: 'ld_graph'+# - where # is position in ld._chartRegister by order of declaration.  First chart declared is ldgraph_0.</p>
+        */        
 
         this.name = function(val){
             if(typeof val === 'undefined'){
@@ -174,6 +277,14 @@ var ld = {
             }        
         };
 
+        /** @function data
+        * @memberof ld.rowGraph
+        * @param {object} [data] - json object - list of named arrays
+        * @description
+        * <p>Set the data for chart to represent. If no parameter passed data object returned</p>
+        * <p>It must contain a column with the place ID, a column with type indicator (used as row values) and values columns</p>
+        */
+
         this.data = function(val){
             if(typeof val === 'undefined'){
                 return this._data;
@@ -182,6 +293,13 @@ var ld = {
                 return this;
             }        
         };
+
+        /** @function place
+        * @memberof ld.rowGraph
+        * @param {string} [placeHeader] - name of place key in data
+        * @description
+        * <p>Set the column to use for place data. If no parameter passed place string returned</p>
+        */        
 
         this.place = function(val){
             if(typeof val === 'undefined'){
@@ -192,6 +310,13 @@ var ld = {
             }        
         };
 
+        /** @function type
+        * @memberof ld.rowGraph
+        * @param {string} [typeHeader] - name of type key in data
+        * @description
+        * <p>Set the column to use for type data. If no parameter passed type string returned</p>
+        */          
+
         this.type = function(val){
             if(typeof val === 'undefined'){
                 return this._type;
@@ -199,7 +324,14 @@ var ld = {
                 this._type=val;
                 return this;
             }        
-        }; 
+        };
+
+        /** @function values
+        * @memberof ld.rowGraph
+        * @param {string} [valuesHeader] - name of values key in data
+        * @description
+        * <p>Set the column to use for value data. If no parameter passed values string returned</p>
+        */         
 
         this.values = function(val){
             if(typeof val === 'undefined'){
@@ -209,6 +341,14 @@ var ld = {
                 return this;
             }        
         };
+
+        /** @function barcolor
+        * @memberof ld.rowGraph
+        * @param {string} [barColor] - color for chart
+        * @description
+        * <p>Set the color of the chart. If no parameter passed barcolor string returned</p>
+        * <p><b>Default value</b>: "#0091EA" </p>
+        */               
         
         this.barcolor = function(val){
             if(typeof val === 'undefined'){
@@ -219,6 +359,15 @@ var ld = {
             }        
         };
 
+
+        /** @function mapcolors
+        * @memberof ld.rowGraph
+        * @param {array} [mapColors] - colors for map
+        * @description
+        * <p>Set the colors of the map when no filter selected.  If no mapColors declated then autogenerated from barcolor.  Expects an array of 5 hex values.  If no parameter passed mapcolors array returned</p>
+        * <p><b>Default value</b>: "[]" </p>
+        */           
+
         this.mapcolors = function(val){
             if(typeof val === 'undefined'){
                 return this._mapcolors;
@@ -228,7 +377,15 @@ var ld = {
             }        
         };
 
-        this.elasticY = function(val){
+        /** @function elasticX 
+        * @memberof ld.rowGraph
+        * @param {boolean} [elasticX] - whether x axis rescales on filter
+        * @description
+        * <p>Set whether the x axis rescales on filter.  If no parameter passed elasticX boolean returned</p>
+        * <p><b>Default value</b>: "[]" </p>
+        */
+
+        this.elasticX = function(val){
             if(typeof val === 'undefined'){
                 return this._elasticY;
             } else {
@@ -448,7 +605,7 @@ var ld = {
         };
 
         this._genMapColors = function(){
-            return ['#cccccc',ld.colorScale(this._barcolor,1),ld.colorScale(this._barcolor,2),ld.colorScale(this._barcolor,3),ld.colorScale(this._barcolor,4)];
+            return ['#cccccc',ld._colorScale(this._barcolor,1),ld._colorScale(this._barcolor,2),ld._colorScale(this._barcolor,3),ld._colorScale(this._barcolor,4)];
         };
 
         this._inRelations = function(thisgraph,parentgraph){
@@ -480,6 +637,13 @@ var ld = {
         }   
     },
 
+    /** @namespace map
+    * @memberof ld
+    * @param {string} [id] - ID of div for map to appear in
+    * @description
+    * <p>var map = new ld.map('#map')</p>
+    */
+
     map:function (id){
 
         this._id = id;
@@ -500,6 +664,13 @@ var ld = {
         
         ld._mapRegister.push(this);
 
+        /** @function geojson
+        * @memberof ld.map
+        * @param {object} [geojson] - geojson object to be used in leaflet map
+        * @description
+        * <p>Set the geojson to use for map. If no parameter passed geojson object returned.</p>
+        */         
+
         this.geojson = function(val){
             if(typeof val === 'undefined'){
                 return this._geojson;
@@ -509,6 +680,13 @@ var ld = {
             }        
         };
 
+        /** @function center
+        * @memberof ld.map
+        * @param {array} [[lat,lng]] - array of lat lng to center on.
+        * @description
+        * <p>Set the center of the map. If no parameter passed lat lng array returned.</p>
+        */        
+
         this.center = function(val){
             if(typeof val === 'undefined'){
                 return this._center;
@@ -516,7 +694,14 @@ var ld = {
                 this._center=val;
                 return this;
             }        
-        }; 
+        };
+
+        /** @function zoom
+        * @memberof ld.map
+        * @param {integer} [zoom] - zoom to be used in leaflet map
+        * @description
+        * <p>Set the zoom to use for map. If no parameter passed zoom integer returned.</p>
+        */      
 
         this.zoom = function(val){
             if(typeof val === 'undefined'){
@@ -526,6 +711,13 @@ var ld = {
                 return this;
             }        
         };
+
+        /** @function joinAttr
+        * @memberof ld.map
+        * @param {string} [joinAttr] - which geojson feature property to use to join data
+        * @description
+        * <p>Declares which geojson feature property (place name or ID) should join to the place columns on the charts. If no parameter passed joinAttr string returned.</p>
+        */        
         
         this.joinAttr = function(val){
             if(typeof val === 'undefined'){
@@ -536,6 +728,13 @@ var ld = {
             }        
         };
 
+        /** @function infoAttr
+        * @memberof ld.map
+        * @param {string} [infoAttr] - which geojson feature property to display in info popup
+        * @description
+        * <p>Declares which geojson feature property to display in info popup.  If none declared info pop up not created. If no parameter passed infoAttr string returned.</p>
+        */        
+
         this.infoAttr = function(val){
             if(typeof val === 'undefined'){
                 return this._infoAttr;
@@ -545,14 +744,13 @@ var ld = {
             }        
         };        
 
-        this.colorAccessor = function(val){
-            if(typeof val === 'undefined'){
-                return this._colorAccessor;
-            } else {
-                this._colorAccessor=val;
-                return this;
-            }        
-        };
+        /** @function mergeColors
+        * @memberof ld.map
+        * @param {array} [mergeColors] - mergeColors
+        * @description
+        * <p>Sets array of colors to use on map when charts are merged. If no parameter passed mergeColors array returned.</p>
+        * <p><b>Default value</b>: "['#CCCCCC','#FFECB3','#FFC107','#FFA000','#FF6F00']" </p>
+        */
 
         this.mergeColors = function(val){
             if(typeof val === 'undefined'){
@@ -562,6 +760,14 @@ var ld = {
                 return this;
             }        
         };
+
+       /** @function colors
+        * @memberof ld.map
+        * @param {array} [mergeColors] - colors
+        * @description
+        * <p>Sets array of colors to use on map when no chart filtered. If no parameter passed colors array returned.</p>
+        * <p><b>Default value</b>: "['#CCCCCC','#FFECB3','#FFC107','#FFA000','#FF6F00']" </p>
+        */        
 
         this.colors = function(val){
             if(typeof val === 'undefined'){
@@ -737,7 +943,7 @@ var ld = {
                     this._filterData = mapData;
                     this._subData = [];
                 } else {
-                    if(ld.getRelationOperation(ld._chartRegister[ld._chartSubFiltered]._name,ld._chartRegister[ld._chartFiltered]._name)=='-'){
+                    if(ld._getRelationOperation(ld._chartRegister[ld._chartSubFiltered]._name,ld._chartRegister[ld._chartFiltered]._name)=='-'){
                         mapData = parent._minusCF(ld._chartRegister[ld._chartFiltered].cf.placeGroup.all(),ld._chartRegister[ld._chartSubFiltered].cf.placeGroup.all());
                     } else {
                         mapData = parent._divideCF(ld._chartRegister[ld._chartFiltered].cf.placeGroup.all(),ld._chartRegister[ld._chartSubFiltered].cf.placeGroup.all());
